@@ -15,11 +15,17 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"src/HW2021/filtering"
 	"strconv"
 	"time"
+)
+
+var (
+	infoLog  = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 )
 
 func main() {
@@ -42,14 +48,15 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	select {
 	case sig := <-c:
-		fmt.Printf("Got %s signal. Aborting ... \n", sig)
+		// fmt.Printf("Got %s signal. Aborting ... \n", sig)
+		infoLog.Printf("Got %s signal. Aborting ... \n", sig)
 		os.Exit(0)
 	}
 
 }
 
 func dataSource(numb chan int) {
-	menu := fmt.Sprintf("Menu:\n \"Menu\" - open the menu\n \"buffer\" - enter the buffer value\n \"timer\" - enter the timer value\n \"exit\" - exiting the program\n")
+	menu := "Menu:\n \"Menu\" - open the menu\n \"buffer\" - enter the buffer value\n \"timer\" - enter the timer value\n \"exit\" - exiting the program\n"
 	fmt.Print(menu)
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -58,14 +65,14 @@ func dataSource(numb chan int) {
 		case "menu":
 			fmt.Print(menu)
 		case "exit":
-			fmt.Println("exit from the program")
+			infoLog.Println("exit from the program")
 			os.Exit(0)
 		case "buffer":
 			fmt.Println("enter the buffer value")
 			scanner.Scan()
 			buff, err := strconv.Atoi(scanner.Text())
 			if err != nil {
-				fmt.Println("only need to enter an integer B")
+				errorLog.Println("only need to enter an integer")
 				continue
 			}
 			filtering.BufferSize = buff
@@ -74,14 +81,14 @@ func dataSource(numb chan int) {
 			scanner.Scan()
 			sec, err := strconv.Atoi(scanner.Text())
 			if err != nil {
-				fmt.Println("only need to enter an integer T")
+				errorLog.Println("only need to enter an integer T")
 				continue
 			}
 			filtering.TimeBufferClear = time.Duration(sec) * time.Second
 		default:
 			num, err := strconv.Atoi(scanner.Text())
 			if err != nil {
-				fmt.Println("only need to enter integers")
+				errorLog.Println("only need to enter integers")
 				continue
 			}
 			numb <- num
@@ -93,6 +100,6 @@ func dataSource(numb chan int) {
 
 func consumer(numbIn chan int) {
 	for numb := range numbIn {
-		fmt.Printf("Получены данные: %d\n", numb)
+		infoLog.Printf("Получены данные: %d\n", numb)
 	}
 }
