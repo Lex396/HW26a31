@@ -18,9 +18,10 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"src/HW2021/filtering"
 	"strconv"
 	"time"
+
+	"HW2021/filtering"
 )
 
 var (
