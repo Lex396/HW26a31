@@ -31,3 +31,15 @@
  	git checkout main
  	git merge --no-ff release
  	git push origin main
+10.
+	Dockerfile, описывающий двухступенчатую сборку образа
+11.
+	git add main.go dockerfile readme.md
+	git commit -m "add logingadded logging to the console and to the file"
+	git checkout main
+	git merge --no-ff develop
+	git tag -a V1.1 -m "V1.1"
+12.
+	git push origin develop
+	git push origin main
+	git push origin V1.1

@@ -1,20 +1,9 @@
-// Стадия фильтрации отрицательных чисел (не пропускать отрицательные числа).
-// Стадия фильтрации чисел, не кратных 3 (не пропускать такие числа), исключая также и 0.
-// В этой стадии предусмотреть опустошение буфера (и соответственно, передачу этих данных, если они есть, дальше) с определённым интервалом во времени.
-// Значения размера буфера и этого интервала времени сделать настраиваемыми.
-
-// Написать источник данных для конвейера. Непосредственным источником данных должна быть консоль.
-
-// Также написать код потребителя данных конвейера. Данные от конвейера можно направить снова в консоль построчно, сопроводив
-// их каким-нибудь поясняющим текстом, например: «Получены данные …».
-
-// При написании источника данных подумайте о фильтрации нечисловых данных, которые можно ввести через консоль. Как и где их фильтровать, решайте сами.
-
 package main
 
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -25,11 +14,26 @@ import (
 )
 
 var (
-	infoLog  = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLog  *log.Logger
+	errorLog *log.Logger
 )
 
+func initLoggers(logFile *os.File) {
+	nmw := io.MultiWriter(os.Stdout, logFile)
+
+	infoLog = log.New(nmw, "INFO\t", log.Ldate|log.Ltime)
+	errorLog = log.New(nmw, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+}
+
 func main() {
+
+	logFile, err := os.OpenFile("logFile.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		errorLog.Panicf("error opening file: %s", err)
+	}
+
+	initLoggers(logFile)
+	defer logFile.Close()
 
 	numbers := make(chan int)
 	go dataSource(numbers)
@@ -49,7 +53,6 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	select {
 	case sig := <-c:
-		// fmt.Printf("Got %s signal. Aborting ... \n", sig)
 		infoLog.Printf("Got %s signal. Aborting ... \n", sig)
 		os.Exit(0)
 	}
@@ -57,14 +60,17 @@ func main() {
 }
 
 func dataSource(numb chan int) {
-	menu := "Menu:\n \"Menu\" - open the menu\n \"buffer\" - enter the buffer value\n \"timer\" - enter the timer value\n \"exit\" - exiting the program\n"
-	fmt.Print(menu)
+	menu := "Menu:\n \"Menu\" - open the menu\n \"buffer\" - enter the buffer value\n \"timer\" - enter the timer value\n \"exit\" - exiting the program"
+	ent := "enter a number"
+	fmt.Println(menu)
+	fmt.Println(ent)
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		scanner.Scan()
 		switch scanner.Text() {
 		case "menu":
-			fmt.Print(menu)
+			fmt.Println(menu)
+			fmt.Println(ent)
 		case "exit":
 			infoLog.Println("exit from the program")
 			os.Exit(0)
